@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nowoczesny Workspace</title>
+    <meta name="description" content="Kompletne środowisko pracy: edytor blokowy, bazy danych, Kanban, kalendarz i współpraca." />
+    <meta property="og:title" content="Nowoczesny Workspace" />
+    <meta property="og:description" content="Kompletne środowisko pracy: edytor blokowy, bazy danych, Kanban, kalendarz i współpraca." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    
+    <!-- Preconnect & Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Anti-flicker Theme Initialization -->
+    <script>
+      (function() {
+        try {
+          var t = localStorage.getItem('searchpoint_theme') || 'system';
+          var isDark = t === 'dark' || (t === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (isDark) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <!-- Puter.js v2 - Open-Source MIT AI Client (Zero API Key, Zero Install) -->
+    <script src="https://js.puter.com/v2/"></script>
+  </head>
+  <body class="bg-[#f8fafc] text-gray-900 antialiased overflow-hidden selection:bg-blue-500/20 selection:text-blue-900">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

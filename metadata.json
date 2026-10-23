@@ -1,0 +1,6 @@
+{
+  "name": "Nowoczesny Workspace",
+  "description": "Kompletne środowisko pracy: edytor blokowy, bazy danych, Kanban, kalendarz i współpraca.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

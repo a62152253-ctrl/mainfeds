@@ -1,0 +1,118 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile in the workspace",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["uid", "email"]
+    },
+    "WorkspacePage": {
+      "title": "WorkspacePage",
+      "description": "A workspace document with blocks",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "title": { "type": "string" },
+        "icon": { "type": "string" },
+        "coverGradient": { "type": "string" },
+        "folderId": { "type": "string" },
+        "blocks": { "type": "array" },
+        "isFavorite": { "type": "boolean" },
+        "isDeleted": { "type": "boolean" },
+        "isPublic": { "type": "boolean" },
+        "publicSlug": { "type": "string" },
+        "tags": { "type": "array" },
+        "comments": { "type": "array" },
+        "versions": { "type": "array" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["id", "ownerId", "title", "blocks"]
+    },
+    "TaskItem": {
+      "title": "TaskItem",
+      "description": "A unified workspace task item",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "title": { "type": "string" },
+        "status": { "type": "string", "enum": ["Do zrobienia", "W trakcie", "Zrobione"] },
+        "priority": { "type": "string", "enum": ["Niski", "Średni", "Wysoki", "Krytyczny"] },
+        "dueDate": { "type": "string" },
+        "tag": { "type": "string" },
+        "assignee": { "type": "string" },
+        "pageId": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["id", "ownerId", "title", "status", "priority", "dueDate"]
+    },
+    "WorkspaceFolder": {
+      "title": "WorkspaceFolder",
+      "description": "A folder in the workspace hierarchy",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "name": { "type": "string" },
+        "icon": { "type": "string" },
+        "parentId": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "ownerId", "name"]
+    },
+    "PublicPage": {
+      "title": "PublicPage",
+      "description": "Published document publicly readable by all users and guests",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "authorName": { "type": "string" },
+        "authorPhoto": { "type": "string" },
+        "title": { "type": "string" },
+        "icon": { "type": "string" },
+        "coverGradient": { "type": "string" },
+        "blocks": { "type": "array" },
+        "publicSlug": { "type": "string" },
+        "tags": { "type": "array" },
+        "viewsCount": { "type": "number" },
+        "likesCount": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["id", "ownerId", "title", "blocks"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile data"
+    },
+    "/pages/{pageId}": {
+      "schema": "WorkspacePage",
+      "description": "Private and shared workspace pages"
+    },
+    "/tasks/{taskId}": {
+      "schema": "TaskItem",
+      "description": "User tasks"
+    },
+    "/folders/{folderId}": {
+      "schema": "WorkspaceFolder",
+      "description": "User folders"
+    },
+    "/public_pages/{pageId}": {
+      "schema": "PublicPage",
+      "description": "Public documents readable by anyone"
+    }
+  }
+}

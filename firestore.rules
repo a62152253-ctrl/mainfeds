@@ -1,0 +1,147 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default catch-all deny rule for zero-trust posture
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isSharedWithCurrentUser(data) {
+      return isSignedIn() &&
+        ('sharedWith' in data) &&
+        data.sharedWith is list &&
+        (
+          (request.auth.token.email != null && request.auth.token.email in data.sharedWith) ||
+          ('all_user@gmaial.com' in data.sharedWith) ||
+          ('all_user@gmail.com' in data.sharedWith)
+        );
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
+    // User profiles (strictly protected personal data)
+    match /users/{userId} {
+      allow get: if isValidId(userId) && isOwner(userId);
+      allow list: if false; // Block user enumeration / PII scraping
+      allow create: if isValidId(userId) && isOwner(userId) && incoming().uid == request.auth.uid;
+      allow update: if isValidId(userId) && isOwner(userId) && incoming().uid == existing().uid;
+      allow delete: if isValidId(userId) && isOwner(userId);
+    }
+
+    // Team Workspaces (collaborative team rooms)
+    match /team_workspaces/{teamId} {
+      allow get: if isValidId(teamId) && isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isValidId(teamId) && isSignedIn() && incoming().ownerId == request.auth.uid;
+      allow update: if isValidId(teamId) && isSignedIn();
+      allow delete: if isValidId(teamId) && isSignedIn() && existing().ownerId == request.auth.uid;
+    }
+
+    // Team Invitations
+    match /team_invites/{inviteId} {
+      allow get: if isValidId(inviteId) && isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isValidId(inviteId) && isSignedIn();
+      allow update: if isValidId(inviteId) && isSignedIn();
+      allow delete: if isValidId(inviteId) && isSignedIn();
+    }
+
+    // Workspace documents (personal, team-shared, or public)
+    match /pages/{pageId} {
+      allow get: if isValidId(pageId) && (
+        (isSignedIn() && existing().ownerId == request.auth.uid) ||
+        (('teamId' in existing()) && existing().teamId != null && isSignedIn()) ||
+        (('workspaceId' in existing()) && existing().workspaceId != null && existing().workspaceId != 'ws-personal' && isSignedIn()) ||
+        (('isPublic' in existing()) && existing().isPublic == true) ||
+        isSharedWithCurrentUser(existing())
+      );
+      allow list: if isSignedIn() && (
+        resource.data.ownerId == request.auth.uid ||
+        (('teamId' in resource.data) && resource.data.teamId != null) ||
+        (('workspaceId' in resource.data) && resource.data.workspaceId != null && resource.data.workspaceId != 'ws-personal') ||
+        (('isPublic' in resource.data) && resource.data.isPublic == true) ||
+        isSharedWithCurrentUser(resource.data)
+      );
+      allow create: if isValidId(pageId) && isSignedIn() && incoming().ownerId == request.auth.uid;
+      allow update: if isValidId(pageId) && isSignedIn() && (
+        existing().ownerId == request.auth.uid ||
+        (('teamId' in existing()) && existing().teamId != null) ||
+        (('workspaceId' in existing()) && existing().workspaceId != null && existing().workspaceId != 'ws-personal') ||
+        (('isPublic' in existing()) && existing().isPublic == true) ||
+        isSharedWithCurrentUser(existing())
+      );
+      allow delete: if isValidId(pageId) && isSignedIn() && existing().ownerId == request.auth.uid;
+    }
+
+    // User unified tasks (Kanban, Database, Calendar, personal & team-shared)
+    match /tasks/{taskId} {
+      allow get: if isValidId(taskId) && (
+        (isSignedIn() && existing().ownerId == request.auth.uid) ||
+        (('teamId' in existing()) && existing().teamId != null && isSignedIn()) ||
+        (('workspaceId' in existing()) && existing().workspaceId != null && existing().workspaceId != 'ws-personal' && isSignedIn()) ||
+        (('isPublic' in existing()) && existing().isPublic == true)
+      );
+      allow list: if isSignedIn() && (
+        resource.data.ownerId == request.auth.uid ||
+        (('teamId' in resource.data) && resource.data.teamId != null) ||
+        (('workspaceId' in resource.data) && resource.data.workspaceId != null && resource.data.workspaceId != 'ws-personal') ||
+        (('isPublic' in resource.data) && resource.data.isPublic == true)
+      );
+      allow create: if isValidId(taskId) && isSignedIn() && incoming().ownerId == request.auth.uid;
+      allow update: if isValidId(taskId) && isSignedIn() && (
+        existing().ownerId == request.auth.uid ||
+        (('teamId' in existing()) && existing().teamId != null) ||
+        (('workspaceId' in existing()) && existing().workspaceId != null && existing().workspaceId != 'ws-personal') ||
+        (('isPublic' in existing()) && existing().isPublic == true)
+      );
+      allow delete: if isValidId(taskId) && isSignedIn() && existing().ownerId == request.auth.uid;
+    }
+
+    // Workspace folders
+    match /folders/{folderId} {
+      allow get: if isValidId(folderId) && isSignedIn() && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isValidId(folderId) && isSignedIn() && incoming().ownerId == request.auth.uid;
+      allow update: if isValidId(folderId) && isSignedIn() && existing().ownerId == request.auth.uid && incoming().ownerId == existing().ownerId;
+      allow delete: if isValidId(folderId) && isSignedIn() && existing().ownerId == request.auth.uid;
+    }
+
+    // Publicly published documents (readable by all guests & users worldwide)
+    match /public_pages/{pageId} {
+      allow get: if isValidId(pageId);
+      allow list: if true;
+      allow create: if isValidId(pageId) && isSignedIn() && incoming().ownerId == request.auth.uid;
+      allow update: if isValidId(pageId) && (
+        (isSignedIn() && existing().ownerId == request.auth.uid && incoming().ownerId == existing().ownerId) ||
+        (incoming().diff(existing()).affectedKeys().hasOnly(['viewsCount', 'likesCount']))
+      );
+      allow delete: if isValidId(pageId) && isSignedIn() && existing().ownerId == request.auth.uid;
+    }
+  }
+}
